@@ -1,0 +1,22 @@
+# Ignore Python caches
+__pycache__/
+*.pyc
+
+# Ignore AI Model (Too big for standard GitHub)
+ai_service/models/*.pth
+
+# Ignore Laravel Dependencies (They are re-installed via Docker)
+web_app/vendor/
+web_app/node_modules/
+web_app/.env
+
+# Ignore System files
+.DS_Store
+Thumbs.db
+
+# Ignore python venv
+.venv
+
+# Temp
+ai_service/Dockerfile
+docker_compose.yml
