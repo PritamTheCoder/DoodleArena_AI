@@ -46,9 +46,9 @@ To host this for friends on your local network:
 
 | Service | Path | Port | Description |
 | :--- | :--- | :--- | :--- |
-| **Web App** | `/web_app` | `8000` | Laravel Backend & Frontend (Blade + Alpine.js) |
+| **Web App** | `/backend_laravel` | `8000` | Laravel Backend & Frontend (Blade + Alpine.js) |
 | **AI API** | `/ai_service` | `8001` | Python FastAPI (Torch Inference) |
-| **Database** | N/A | `3306` | MySQL 8.0 |
+| **Database** | `doodle_duel` | `3306` | MySQL 8.0 |
 | **Redis** | N/A | `6379` | Queue & WebSocket Broadcasting |
 
 ## The AI Model
