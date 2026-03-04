@@ -1,69 +1,101 @@
-# DoodleArena AI
+# DoodleNet — AI Doodle Recognition
 
-**DoodleArena AI** is a real-time, 2-player competitive drawing game powered by Deep Learning. 
-Players are given a prompt (e.g., "Draw a Cat"), and a MobileNetV3 neural network scores their drawings in real-time. The player with the best drawing accuracy wins the round.
+**DoodleNet** is a real-time doodle recognition engine powered by a custom-trained **MobileNetV3-Small** neural network. Draw a doodle, and the AI scores it against 30 known categories from the [Google Quick, Draw!](https://quickdraw.withgoogle.com/data) dataset.
 
-![Project Status](https://img.shields.io/badge/status-development-orange) ![Tech Stack](https://img.shields.io/badge/stack-Laravel_|_FastAPI_|_AlpineJS-blue)
+![Status](https://img.shields.io/badge/status-active-brightgreen) ![Stack](https://img.shields.io/badge/stack-FastAPI_|_Streamlit_|_PyTorch-blueviolet)
 
-## System Architecture
+> 📐 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for Mermaid diagrams of the full data flow and system design.
+---
 
-The application is split into two distinct services:
+## ✨ Features
 
-1.  **Game Engine (Laravel 10+)**: Handles authentication, game state, lobbies, and WebSocket broadcasting (using Laravel Reverb or Pusher).
-2.  **AI Vision Service (FastAPI)**: A stateless microservice that accepts a Base64 image and returns a confidence score.
+| Feature | Description |
+| :--- | :--- |
+| **Real-time Recognition** | Draw on a canvas and get instant AI predictions |
+| **Top-5 Predictions** | See ranked confidence scores for the top 5 classes |
+| **Glassmorphism UI** | Premium dark-mode Streamlit dashboard |
+| **REST API** | FastAPI backend with health checks, batch inference, and Swagger docs |
+| **Docker Ready** | One command to build and run everything |
 
+## 🧠 The AI Model
 
-## Quick Start (Local Hosting)
+* **Architecture:** MobileNetV3-Small (custom-trained)
+* **Input:** 96×96 Greyscale bitmaps
+* **Classes:** 30 doodle categories (Cat, Dog, Pizza, House, etc.)
+* **Preprocessing:** Binarize → BBox Crop → Center/Pad → Resize → Invert → Normalize
 
-To host this for friends on your local network:
+## 📂 Project Structure
+
+```
+DoodleArena_AI/
+├── ai_service/
+│   ├── main.py            # FastAPI app (REST API)
+│   ├── app.py             # Streamlit UI (Glassmorphism dashboard)
+│   ├── model.py           # MobileNetV3 architecture & loader
+│   ├── preprocessor.py    # Image preprocessing pipeline
+│   ├── utils.py           # Confidence calculation & top-k
+│   ├── model/
+│   │   └── best.pth       # Trained model weights (not in git)
+│   ├── requirements.txt
+│   └── Dockerfile
+├── docker_compose.yml
+└── README.md
+```
+
+## 🚀 Quick Start
 
 ### Prerequisites
-* Docker Desktop installed and running.
-* Git.
+* **Docker Desktop** installed and running
+* A trained model file (`best.pth`) placed in `ai_service/model/`
 
-### Installation
+### Run with Docker
 
-1.  **Clone the repo:**
-    ```bash
-    git clone [https://github.com/yourusername/DoodleArena_AI.git](https://github.com/yourusername/DoodleArena_AI.git)
-    cd DoodleArena_AI
-    ```
+```bash
+git clone https://github.com/yourusername/DoodleArena_AI.git
+cd DoodleArena_AI
+docker-compose -f docker_compose.yml up --build -d
+```
 
-2.  **Add the Model:**
-    Place your trained PyTorch model (`best.pth`) inside `ai_service/models/`.
+### Access
 
-3.  **Start the Services:**
-    ```bash
-    docker-compose up --build -d
-    ```
+| Service | URL | Description |
+| :--- | :--- | :--- |
+| **Streamlit UI** | `http://localhost:8501` | Interactive drawing + recognition |
+| **FastAPI Docs** | `http://localhost:8001/docs` | Swagger API documentation |
+| **Health Check** | `http://localhost:8001/health` | Model status |
 
-4.  **Access the Game:**
-    * **Host (You):** Go to `http://localhost:8000`
-    * **Friends:** Find your local IP (e.g., `ipconfig` on Windows -> IPv4 Address, usually `192.168.x.x`).
-    * Friends should visit: `http://192.168.x.x:8000`
+### Run Locally (no Docker)
 
-## Project Structure
+```bash
+cd ai_service
+pip install -r requirements.txt
 
-| Service | Path | Port | Description |
-| :--- | :--- | :--- | :--- |
-| **Web App** | `/backend_laravel` | `8000` | Laravel Backend & Frontend (Blade + Alpine.js) |
-| **AI API** | `/ai_service` | `8001` | Python FastAPI (Torch Inference) |
-| **Database** | `doodle_duel` | `3306` | MySQL 8.0 |
-| **Redis** | N/A | `6379` | Queue & WebSocket Broadcasting |
+# Terminal 1 — API
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
-## The AI Model
+# Terminal 2 — UI
+streamlit run app.py
+```
 
-* **Architecture:** MobileNetV3 (Small) custom-trained on the Google QuickDraw dataset.
-* **Input:** 96x96 Greyscale bitmaps.
-* **Classes:** 30 common doodle categories (Cat, House, Sun, etc.).
-* **Preprocessing:** The pipeline simulates the 28x28 pixelation of the original dataset to ensure high accuracy even with rough mouse drawings.
+## 🔌 API Endpoints
 
-## How to Play
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | Health check |
+| `GET` | `/health` | Detailed health + model info |
+| `GET` | `/classes` | List all 30 classes |
+| `POST` | `/recognize` | Recognize a single doodle (base64) |
+| `POST` | `/batch_recognize` | Batch recognition |
+| `POST` | `/visualize` | Returns the 96×96 image the model actually sees |
 
-1.  Create an account or Login.
-2.  Click **"Create Room"** to generate a unique Room Code.
-3.  Share the code with a friend.
-4.  Once Player 2 joins, the game begins!
-5.  **Goal:** Reach 2 points first.
-    * Round 1: "Draw a Pizza" -> Scores compared -> Point awarded.
-    * Round 2: "Draw a Car" -> ...
+### Example Request
+
+```bash
+curl -X POST http://localhost:8001/recognize \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "cat", "image_base64": "<base64_string>"}'
+```
+
+## 📄 License
+
+MIT 

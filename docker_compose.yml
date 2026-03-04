@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # The Python AI Service (FastAPI + Streamlit)
+  ai_service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    container_name: doodle_ai
+    ports:
+      - "8001:8000"  # API Port
+      - "8501:8501"  # Streamlit Port
+    volumes:
+      - ./ai_service:/app
+    environment:
+      - MODEL_PATH=model/best.pth
+      - DEBUG=True
+    networks:
+      - doodle_net
+
+networks:
+  doodle_net:
+    driver: bridge
