@@ -98,4 +98,4 @@ curl -X POST http://localhost:8001/recognize \
 
 ## 📄 License
 
-MIT
+MIT 
